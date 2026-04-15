@@ -1,8 +1,10 @@
-# DeepFaceID
-
-DeepFaceID is a face recognition system that identifies users through a laptop camera.
-
 ![DeepFaceID](logo.png)
+
+**DeepFaceID is a face recognition system that identifies users through a laptop camera.**
+
+---
+
+
 
 ## How It Works
 
@@ -12,7 +14,7 @@ The system uses two algorithms:
 
 Each detected face is cropped, aligned by eye position, resized to 112×112, and passed to the embedding model. Identification is done by computing the L2 distance between the query embedding and all stored embeddings. If the closest distance is below a calibrated threshold, the user is recognized; otherwise the person is treated as unknown.
 
-Embeddings are stored in a lightweight SQLite database. User photos are not stored — they are deleted after embedding extraction.
+Embeddings are stored in a lightweight SQLite database. <u>User photos are not stored</u> — they are deleted after embedding extraction.
 
 ## Workflow
 
