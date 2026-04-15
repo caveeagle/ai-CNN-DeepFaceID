@@ -1,7 +1,22 @@
-opencv_python
-pillow
+
+# Computer vision
+opencv-python-headless>=4.9.0.80
+
+# YOLO face detection
 ultralytics
 
-numpy
+# Face embedding
+facenet-pytorch
+
+# PyTorch (CPU version - change to cu118/cu121 if GPU available)
 torch
-facenet_pytorch
+torchvision
+
+# numpy - must be < 2.0 due to facenet-pytorch compiled with numpy 1.x
+numpy<2.0
+
+# Image processing (used in tkinter scripts)
+Pillow
+
+# Web UI
+streamlit
