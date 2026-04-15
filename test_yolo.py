@@ -12,21 +12,26 @@ if img is None:
 # 3. Детекция
 results = model(img)
 
-# 4. Отрисовка рамок
-for r in results:
-    for box in r.boxes:
-        x1, y1, x2, y2 = map(int, box.xyxy[0])
+if(1):
 
-        # рамка лица
-        cv2.rectangle(
-            img,
-            (x1, y1),
-            (x2, y2),
-            color=(0, 255, 0),
-            thickness=2
-        )
+    from PIL import Image, ImageDraw  # Pillow library
+    
+    # 4. Отрисовка рамок
+    img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(img_pil)
+    
+    for r in results:
+        for box in r.boxes:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+    
+            # рамка лица
+            draw.rectangle(
+                [(x1, y1), (x2, y2)],
+                outline=(0, 255, 0),
+                width=2
+            )
+    
+    # 5. Показ результата
+    img_pil.show()  
 
-# 5. Показ результата
-cv2.imshow('Face detection', img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+print('Task finished')    

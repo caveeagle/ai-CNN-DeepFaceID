@@ -1,17 +1,17 @@
-import cv2
 import os
+import tkinter as tk
+from PIL import Image, ImageDraw, ImageTk
 from ultralytics import YOLO
 
 #################################
 
 MODEL = 'yolo.v8.nano-face.pt'
-
 model = YOLO(MODEL)
 
 #################################
 
 image_files = sorted([
-    f for f in os.listdir('images')  # image dir
+    f for f in os.listdir('images')
     if f.lower().endswith(('.png', '.jpg', '.jpeg'))
 ])
 
@@ -19,64 +19,56 @@ if not image_files:
     raise RuntimeError('No images')
 
 #################################
-#################################
 
-for filename in image_files:
-    path = os.path.join('images', filename)
-    img = cv2.imread(path)
+root = tk.Tk()
+root.title('Face detection')
+label = tk.Label(root)
+label.pack()
 
-    if img is None:
-        continue
+index = [0]  # list to allow mutation inside nested functions
+
+def show(i):
+    filename = image_files[i]
+    root.title(f'Face detection - {filename} ({i + 1}/{len(image_files)})')
+
+    img = Image.open(os.path.join('images', filename)).convert('RGB')
+    draw = ImageDraw.Draw(img)
 
     results = model(img)
     faces_detected = False
 
-    # Face detection
     for r in results:
         for box in r.boxes:
             faces_detected = True
             x1, y1, x2, y2 = map(int, box.xyxy[0])
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            draw.rectangle([(x1, y1), (x2, y2)], outline=(0, 255, 0), width=2)
 
-    # Not detected:
     if not faces_detected:
-        cv2.putText(
-            img,
-            'No detected',
-            (30, 50),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1.2,
-            (0, 0, 255),
-            3,
-            cv2.LINE_AA
-        )
+        draw.text((30, 50), 'No detected', fill=(255, 0, 0))
 
-    # print filename
-    cv2.putText(
-        img,
-        filename,
-        (30, img.shape[0] - 20),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.8,
-        (255, 255, 255),
-        2,
-        cv2.LINE_AA
-    )
+    draw.text((30, img.height - 40), filename, fill=(255, 255, 255))
 
-    cv2.imshow('Face detection', img)
+    root.geometry(f'{img.width}x{img.height}')
+    label.tk_img = ImageTk.PhotoImage(img)
+    label.config(image=label.tk_img)
 
-    # Keys
-    while True:
-        key = cv2.waitKey(0)
-        if key in (13, 32):   # Enter or Space
-            break
-        if key == 27:        # Esc 
-            cv2.destroyAllWindows()
-            exit(0)
+def on_next(event=None):
+    index[0] += 1
+    if index[0] >= len(image_files):
+        root.destroy()
+        return
+    show(index[0])
+
+def on_quit(event=None):
+    root.destroy()
+
+root.bind('<space>', on_next)
+root.bind('<Return>', on_next)
+root.bind('<Escape>', on_quit)
+
+show(0)
+root.mainloop()
 
 #################################
-#################################
 
-cv2.destroyAllWindows()
-
-print(f'Job finished')
+print('Job finished')
