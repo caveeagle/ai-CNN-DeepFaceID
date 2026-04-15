@@ -71,12 +71,13 @@ if not image_files:
 
 DB_PATH = 'faces.sqlite'
 
-with sqlite3.connect(DB_PATH) as conn:
-    cur = conn.cursor()
-
-    # Load all existing users into a dict: name -> ID
-    cur.execute("SELECT ID, name FROM user")
-    USER_CACHE = {name: uid for uid, name in cur.fetchall()}
+if(0):
+    with sqlite3.connect(DB_PATH) as conn:
+        cur = conn.cursor()
+    
+        # Load all existing users into a dict: name -> ID
+        cur.execute("SELECT ID, name FROM user")
+        USER_CACHE = {name: uid for uid, name in cur.fetchall()}
 
 ################################################
 # Processing loop
@@ -180,36 +181,38 @@ for filename in image_files:
     ################################################
 
     username = extract_username(filename)
-
-    with sqlite3.connect(DB_PATH) as conn:
-        cur = conn.cursor()
-
-        # Create user if not exists
-        if username not in USER_CACHE:
+    
+    if(0):
+        with sqlite3.connect(DB_PATH) as conn:
+            cur = conn.cursor()
+    
+            # Create user if not exists
+            if username not in USER_CACHE:
+                cur.execute(
+                    "INSERT INTO users (name) VALUES (?)",
+                    (username,)
+                )
+                USER_CACHE[username] = cur.lastrowid
+    
+            user_id = USER_CACHE[username]
+    
+            emb_blob = embedding.astype(np.float32).tobytes()
+    
             cur.execute(
-                "INSERT INTO users (name) VALUES (?)",
-                (username,)
+                "INSERT INTO embeddings (user_id, embedding) VALUES (?, ?)",
+                (user_id, emb_blob)
             )
-            USER_CACHE[username] = cur.lastrowid
-
-        user_id = USER_CACHE[username]
-
-        emb_blob = embedding.astype(np.float32).tobytes()
-
-        cur.execute(
-            "INSERT INTO embeddings (user_id, embedding) VALUES (?, ?)",
-            (user_id, emb_blob)
-        )
-
-        conn.commit()
-
-    processed_files.append(path)
+    
+            conn.commit()
+    
+        processed_files.append(path)
 
 ################################################
 # Cleanup
 ################################################
 
-for path in processed_files:
-    os.remove(path)
+if(0):
+    for path in processed_files:
+        os.remove(path)
 
 print("Job finished successfully")
