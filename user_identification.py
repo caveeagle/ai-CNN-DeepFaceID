@@ -1,15 +1,11 @@
-import streamlit as st
 import cv2
 import torch
 import numpy as np
+import streamlit as st
 from ultralytics import YOLO
 from facenet_pytorch import InceptionResnetV1
 
 ################################################
-
-MIN_FACE_AREA_RATIO = 0.05
-CROP_MARGIN_RATIO   = 0.25
-OUTPUT_SIZE         = (112, 112)
 
 MODEL_DETECTED_PATH = 'yolo.v8.nano-face.pt'
 
@@ -28,13 +24,15 @@ def align_crop_by_eyes(crop_bgr, left_eye_xy, right_eye_xy):
     return cv2.warpAffine(crop_bgr, M, (w, h), flags=cv2.INTER_LINEAR)
 
 def make_embedding(img):
-    """
-    Accept a BGR numpy image, return (embedding, msg).
-    """
+    
+    MIN_FACE_AREA_RATIO = 0.05
+    CROP_MARGIN_RATIO   = 0.25
+    OUTPUT_SIZE         = (112, 112)
+
     img_h, img_w = img.shape[:2]
     img_area = img_h * img_w
 
-    detected_results = st.session_state.model_detected(img)
+    detected_results = model_detected(img)
 
     best = None
     best_area = 0
@@ -93,35 +91,37 @@ def make_embedding(img):
     face_tensor = (face_tensor - 127.5) / 128.0
 
     with torch.no_grad():
-        embedding = st.session_state.model_embedding(face_tensor).cpu().numpy()[0]
+        embedding = model_embedding(face_tensor).cpu().numpy()[0]
 
     return embedding, 'OK'
 
 ################################################
 
-# Load models once into session_state
-if 'model_detected' not in st.session_state:
-    st.session_state.model_detected  = YOLO(MODEL_DETECTED_PATH)
-    st.session_state.model_embedding = InceptionResnetV1(pretrained='vggface2').eval()
+@st.cache_resource
+def load_models():
+    model_detected  = YOLO(MODEL_DETECTED_PATH)
+    model_embedding = InceptionResnetV1(pretrained='vggface2').eval()
+    return model_detected, model_embedding
+
+model_detected, model_embedding = load_models()
 
 ################################################
+
+if 'last_image_id' not in st.session_state:
+    st.session_state.last_image_id = None
 
 st.title('Identify User')
 
 camera_image = st.camera_input('Camera')
 
-col1, col2 = st.columns([1, 3])
+status = st.empty()
 
-with col1:
-    identify = st.button('Identify User')
+if camera_image is not None:
+    image_id = hash(camera_image.getvalue())
 
-with col2:
-    status = st.empty()
+    if image_id != st.session_state.last_image_id:
+        st.session_state.last_image_id = image_id
 
-if identify:
-    if camera_image is None:
-        status.text('No image from camera')
-    else:
         status.text('Detecting face...')
 
         img_bytes = np.frombuffer(camera_image.getvalue(), np.uint8)
@@ -135,5 +135,3 @@ if identify:
             status.text(f'Embedding ready — {len(embedding)} dims')
 
         # TODO: compare embedding with database
-        
-        
