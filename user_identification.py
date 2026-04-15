@@ -2,12 +2,19 @@ import cv2
 import torch
 import numpy as np
 import streamlit as st
+
 from ultralytics import YOLO
 from facenet_pytorch import InceptionResnetV1
 
+import sqlite3
+
 ################################################
 
-MODEL_DETECTED_PATH = 'yolo.v8.nano-face.pt'
+MODEL_NAME = 'yolo.v8.nano-face.pt'
+
+DB_PATH = 'faces.sqlite'
+
+DISTANCE_LIMIT = 0.95
 
 ################################################
 
@@ -23,6 +30,20 @@ def align_crop_by_eyes(crop_bgr, left_eye_xy, right_eye_xy):
     h, w = crop_bgr.shape[:2]
     return cv2.warpAffine(crop_bgr, M, (w, h), flags=cv2.INTER_LINEAR)
 
+def find_closest(embedding, db_embeddings):
+    best_name = None
+    best_dist = float('inf')
+
+    for name, db_emb in db_embeddings:
+        dist = np.linalg.norm(embedding - db_emb)
+        if dist < best_dist:
+            best_dist = dist
+            best_name = name
+
+    return best_name, best_dist
+
+################################################
+    
 def make_embedding(img):
     
     MIN_FACE_AREA_RATIO = 0.05
@@ -99,11 +120,35 @@ def make_embedding(img):
 
 @st.cache_resource
 def load_models():
-    model_detected  = YOLO(MODEL_DETECTED_PATH)
+    model_detected  = YOLO(MODEL_NAME)
     model_embedding = InceptionResnetV1(pretrained='vggface2').eval()
     return model_detected, model_embedding
 
 model_detected, model_embedding = load_models()
+
+################################################
+
+@st.cache_resource
+def load_embeddings():
+    with sqlite3.connect(DB_PATH) as conn:
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT users.name, embeddings.embedding
+            FROM embeddings
+            JOIN users ON embeddings.user_id = users.ID
+        """) 
+               
+        rows = cur.fetchall()
+
+    result = []
+    for name, blob in rows:
+        emb = np.frombuffer(blob, dtype=np.float32)
+        result.append((name, emb))
+
+    return result
+
+db_embeddings = load_embeddings()
 
 ################################################
 
@@ -130,8 +175,20 @@ if camera_image is not None:
         embedding, msg = make_embedding(img_bgr)
 
         if embedding is None:
-            status.text(f'Failed: {msg}')
+            #status.text(f'Failed: {msg}')
+            status.markdown('**:red[No face detected]**')
         else:
-            status.text(f'Embedding ready — {len(embedding)} dims')
+            name, dist = find_closest(embedding, db_embeddings)
+            #status.text(f'Closest: {name} — distance: {dist:.2f}')
+            
+            if dist > DISTANCE_LIMIT :
+                
+                status.markdown(f'**:yellow[Unknown user (min.distance: {dist:.2f})]**')
+                
+            else:    
+             
+               status.markdown(f'**:green[User: {name}  (distance: {dist:.2f})]**')
+        
 
-        # TODO: compare embedding with database
+print(f'\nScript finished')
+        
