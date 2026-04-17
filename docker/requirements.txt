@@ -2,3 +2,8 @@ opencv-python-headless>=4.9.0.80
 ultralytics
 numpy<2.0
 streamlit
+
+# FOR facenet-pytorch with --no-deps
+tqdm
+Pillow>=10.2.0
+requests
