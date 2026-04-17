@@ -19,7 +19,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN pip install --no-cache-dir --no-deps facenet-pytorch
-    
+
+# === ultralytics optimisation:
+RUN pip uninstall -y matplotlib seaborn pandas 2>/dev/null || true    
     
 COPY user_identification.py .
 COPY yolo.v8.nano-face.pt .
@@ -33,8 +35,7 @@ RUN python -c "from facenet_pytorch import InceptionResnetV1; InceptionResnetV1(
 # Cleanup cache to reduce final image size
 RUN find /usr/local/lib -name '*.pyc' -delete 2>/dev/null || true && \
     find /usr/local/lib -name '__pycache__' -delete 2>/dev/null || true && \
-    rm -rf /root/.cache/pip /root/.cache/torch /tmp/*
-
+    rm -rf /root/.cache/pip /root/.cache/torch /root/.cache/huggingface /tmp/* /var/tmp/*
 
 # ====================== STAGE 2: Final (runtime) ======================
 FROM python:3.11-slim
