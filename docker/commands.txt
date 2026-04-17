@@ -1,0 +1,6 @@
+
+docker build -t deepfaceid .
+
+
+
+docker run -p 8501:8501 deepfaceid
