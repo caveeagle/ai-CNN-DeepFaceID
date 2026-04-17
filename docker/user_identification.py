@@ -155,7 +155,23 @@ db_embeddings = load_embeddings()
 if 'last_image_id' not in st.session_state:
     st.session_state.last_image_id = None
 
-st.title('Identify User')
+col_logo, col_title = st.columns([1, 4])
+
+with col_logo:
+    st.image('logo.png', width=140)  # меняйте width под нужный размер
+
+with col_title:
+    st.markdown(
+        '<h1 style="text-align:center; color:#1E90FF;">Identify User</h1>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div style="border:1px solid red; padding:8px; border-radius:5px; text-align:center;">'
+        '<span style="color:red; font-size:12px;">'
+        'The system does not store any of your data. Photos are not recorded or saved to disk.'
+        '</span></div>',
+        unsafe_allow_html=True,
+    )    
 
 camera_image = st.camera_input('Camera')
 
@@ -186,9 +202,12 @@ if camera_image is not None:
                 status.markdown(f'**:yellow[Unknown user (min.distance: {dist:.2f})]**')
                 
             else:    
-             
+               
+               if( name == 'Cave' ):
+                    name = '- Victor -'  # for production - use name instead of nick
+               
                status.markdown(f'**:green[User: {name}  (distance: {dist:.2f})]**')
         
 
-print(f'\nScript finished')
+print(f'\nOk')
         
