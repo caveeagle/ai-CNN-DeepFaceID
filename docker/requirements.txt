@@ -1,15 +1,4 @@
-
-# Computer vision
 opencv-python-headless>=4.9.0.80
-
-# YOLO face detection
 ultralytics
-
-# Face embedding
-facenet-pytorch
-
-# numpy - must be < 2.0 due to facenet-pytorch compiled with numpy 1.x
 numpy<2.0
-
-# Web UI
 streamlit

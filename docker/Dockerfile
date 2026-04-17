@@ -15,14 +15,9 @@ RUN pip install --no-cache-dir \
     torch torchvision
 
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install --no-cache-dir \
-    opencv-python-headless>=4.9.0.80 \
-    ultralytics \
-    numpy<2.0 \
-    streamlit && \
-    # Important: facenet-pytorch without torch dependences
-    pip install --no-cache-dir --no-deps facenet-pytorch
+RUN pip install --no-cache-dir --no-deps facenet-pytorch
     
     
 COPY user_identification.py .
