@@ -6,4 +6,9 @@ docker images
 Rebuild:
 docker build --no-cache -t deepfaceid:latest . 
 
+Delete:
+docker rmi -f deepfaceid:latest
+docker builder prune -a  
+
+
 docker run -p 8501:8501 deepfaceid
