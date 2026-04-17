@@ -25,12 +25,8 @@ COPY logo.png .
 # Pre-download InceptionResnetV1 weights (~100 MB) at build time
 # Makes the image deterministic and avoids downloading on first run
 
-RUN python -c "
-from facenet_pytorch import InceptionResnetV1
-model = InceptionResnetV1(pretrained='vggface2')
-print('FaceNet weights preloaded successfully')
-"
+RUN python -c "from facenet_pytorch import InceptionResnetV1; InceptionResnetV1(pretrained='vggface2'); print('Weights preloaded!')"
 
 EXPOSE 8501
 
-CMD ["sh", "-c", "streamlit run user_identification.py --server.port=\${PORT:-8501} --server.address=0.0.0.0"]
+CMD ["sh", "-c", "streamlit run user_identification.py --server.port=${PORT:-8501} --server.address=0.0.0.0"]
