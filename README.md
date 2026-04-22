@@ -2,17 +2,22 @@
 
 **DeepFaceID is a face recognition system that identifies users through a laptop camera.**
 
+🌐 **Live demo: [deepfaceid.run.app](https://deepfaceid-955791681200.europe-west1.run.app)**
+
 ---
-
-
 
 ## How It Works
 
-The system uses two algorithms:
-- **YOLOv8-face** — detects faces and returns keypoints (eye positions) for alignment
-- **InceptionResnetV1** (pretrained on VGGFace2) — extracts a 512-dimensional embedding vector from each face crop
+The system uses two core computer vision models:
+- **YOLOv8-face** — detects faces and returns facial keypoints (eye positions) for alignment
+- **InceptionResnetV1** (pretrained on VGGFace2) — extracts a 512-dimensional embedding vector from each aligned face crop
 
-Each detected face is cropped, aligned by eye position, resized to 112×112, and passed to the embedding model. Identification is done by computing the L2 distance between the query embedding and all stored embeddings. If the closest distance is below a calibrated threshold, the user is recognized; otherwise the person is treated as unknown.
+Each detected face is cropped, aligned by eye position, resized to 112×112, and passed to the embedding model. Identification is performed by computing the L2 (Euclidean) distance between the query embedding and all stored embeddings in the SQLite database. If the closest distance is below the calibrated threshold, the user is recognized; otherwise the person is treated as unknown.
+
+For production readiness the project additionally includes:
+- **Dockerization** — for consistent and portable containerized deployment
+- **Deployment on Google Cloud Platform**
+- **Streamlit** — modern web framework used for the real-time face identification web application
 
 Embeddings are stored in a lightweight SQLite database. <u>User photos are not stored</u> — they are deleted after embedding extraction.
 
@@ -25,6 +30,8 @@ The system consists of three main scripts used in sequence:
 2. **`add_users.py`** — a batch script that reads all photos from `images/`, extracts face embeddings, and saves user names and embeddings to the database. Already processed files are skipped automatically.
 
 3. **`user_identification.py`** — a Streamlit web app for real-time identification. The user takes a snapshot via webcam; the system computes the embedding and returns the closest match from the database.
+
+The full pipeline additionally supports Docker containerization and automated deployment to Google Cloud Platform, enabling seamless transition from local development to cloud production environment.
 
 ## Test Scripts
 
